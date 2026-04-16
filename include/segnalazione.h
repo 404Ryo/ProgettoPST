@@ -1,6 +1,7 @@
 #ifndef SEGNALAZIONE_H
 #define SEGNALAZIONE_H
 
+// Struttura
 typedef struct Segnalazione {
     int codice;
     char nome[50];
@@ -12,7 +13,7 @@ typedef struct Segnalazione {
     struct Segnalazione* next;
 } Segnalazione;
 
-// Prototipi
+// Funzioni prototipi
 Segnalazione* creaSegnalazione();
 Segnalazione* aggiungiSegnalazione(Segnalazione* head);
 void stampaSegnalazioni(Segnalazione* head);
