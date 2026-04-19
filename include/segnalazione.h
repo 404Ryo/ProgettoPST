@@ -1,28 +1,41 @@
 #ifndef SEGNALAZIONE_H
 #define SEGNALAZIONE_H
 
-// Struttura
 typedef struct Segnalazione {
     int codice;
-    char nome[50];
+    char utente[50];
     char categoria[50];
     char descrizione[100];
-    char data[20];
+    char data[30];
     int urgenza;
     char stato[20];
     struct Segnalazione* next;
 } Segnalazione;
 
-// Funzioni prototipi
-Segnalazione* creaSegnalazione();
-Segnalazione* aggiungiSegnalazione(Segnalazione* head);
-void stampaSegnalazioni(Segnalazione* head);
-Segnalazione* cercaPerCodice(Segnalazione* head, int codice);
-void cercaPerCategoria(Segnalazione* head, char categoria[]);
-void aggiornaStato(Segnalazione* head, int codice);
+// CRUD base
+Segnalazione* creaSegnalazione(char username[]);
+Segnalazione* aggiungiSegnalazione(Segnalazione* head, char username[]);
+
+// visualizzazione
+void stampaSegnalazioni(Segnalazione* head, char username[], int isAdmin);
 void stampaPerStato(Segnalazione* head, char stato[]);
 void stampaUrgenti(Segnalazione* head);
-Segnalazione* eliminaSegnalazione(Segnalazione* head, int codice);
+
+// ricerca
+Segnalazione* cercaPerCodice(Segnalazione* head, int codice);
+void cercaPerCategoria(Segnalazione* head, char categoria[]);
+
+// update
+void aggiornaStato(Segnalazione* head, int codice, int isAdmin);
+
+// delete
+Segnalazione* eliminaSegnalazione(Segnalazione* head, int codice, int isAdmin);
+
+// report
 void generaReport(Segnalazione* head);
+
+// file
+void salvaSegnalazione(Segnalazione* s);
+Segnalazione* caricaSegnalazioni();
 
 #endif

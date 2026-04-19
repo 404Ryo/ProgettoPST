@@ -1,66 +1,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
 #include "segnalazione.h"
+#include "colors.h"
+#include "utils.h"
+#include "codice.h"
 
-// Creazione nuova segnalazione
-Segnalazione* creaSegnalazione() {
-    Segnalazione* nuovo = (Segnalazione*)malloc(sizeof(Segnalazione));
+// ===================== CREA =====================
+Segnalazione* creaSegnalazione(char username[]) {
+    Segnalazione* s = malloc(sizeof(Segnalazione));
+    if (!s) {
+        msgError("Errore allocazione memoria");
+        return NULL;
+    }
 
-    printf("Codice: ");
-    scanf("%d", &nuovo->codice);
+    strcpy(s->utente, username);
 
-    printf("Nome cittadino: ");
-    scanf("%s", nuovo->nome);
+    printf(cyan "Categoria (illuminazione/buche/rifiuti/impianti): " reset);
+    scanf("%49s", s->categoria);
 
-    printf("Categoria: ");
-    scanf("%s", nuovo->categoria);
+    s->codice = generaCodice(s->categoria);
 
-    printf("Descrizione: ");
-    scanf(" %[^\n]", nuovo->descrizione);
+    printf(cyan "Descrizione: " reset);
+    scanf(" %[^\n]", s->descrizione);
 
-    printf("Data: ");
-    scanf("%s", nuovo->data);
+    printf(cyan "Urgenza (1-10): " reset);
+    scanf("%d", &s->urgenza);
 
-    printf("Urgenza (1-10): ");
-    scanf("%d", &nuovo->urgenza);
+    // timestamp automatico
+    time_t t = time(NULL);
+    struct tm* tm_info = localtime(&t);
+    strftime(s->data, 30, "%d/%m/%Y %H:%M", tm_info);
 
-    strcpy(nuovo->stato, "aperta");
+    strcpy(s->stato, "aperta");
+    s->next = NULL;
 
-    nuovo->next = NULL;
-    return nuovo;
+    salvaSegnalazione(s);
+
+    msgSuccess("Segnalazione creata!");
+    return s;
 }
 
-// Inserimento
-Segnalazione* aggiungiSegnalazione(Segnalazione* head) {
-    Segnalazione* nuovo = creaSegnalazione();
+// ===================== AGGIUNGI =====================
+Segnalazione* aggiungiSegnalazione(Segnalazione* head, char username[]) {
+    Segnalazione* nuovo = creaSegnalazione(username);
+
+    if (!nuovo) return head;
+
     nuovo->next = head;
     return nuovo;
 }
 
-// Stampa
-void stampaSegnalazioni(Segnalazione* head) {
-    if (head == NULL) {
-        printf("Nessuna segnalazione.\n");
+// ===================== STAMPA =====================
+void stampaSegnalazioni(Segnalazione* head, char username[], int isAdmin) {
+    if (!head) {
+        msgError("Nessuna segnalazione");
         return;
     }
 
-    while (head != NULL) {
-        printf("\nCodice: %d", head->codice);
-        printf("\nNome: %s", head->nome);
-        printf("\nCategoria: %s", head->categoria);
-        printf("\nDescrizione: %s", head->descrizione);
-        printf("\nData: %s", head->data);
-        printf("\nUrgenza: %d", head->urgenza);
-        printf("\nStato: %s\n", head->stato);
+    while (head) {
+
+        if (!isAdmin && strcmp(head->utente, username) != 0) {
+            head = head->next;
+            continue;
+        }
+
+        printf(yellow "\n---------------------\n" reset);
+        printf("Codice: %d\n", head->codice);
+        printf("Utente: %s\n", head->utente);
+        printf("Categoria: %s\n", head->categoria);
+        printf("Descrizione: %s\n", head->descrizione);
+        printf("Data: %s\n", head->data);
+        printf("Urgenza: %d\n", head->urgenza);
+        printf("Stato: %s\n", head->stato);
 
         head = head->next;
     }
 }
 
-// Ricerca codice
+// ===================== CERCA CODICE =====================
 Segnalazione* cercaPerCodice(Segnalazione* head, int codice) {
-    while (head != NULL) {
+    while (head) {
         if (head->codice == codice)
             return head;
         head = head->next;
@@ -68,88 +90,155 @@ Segnalazione* cercaPerCodice(Segnalazione* head, int codice) {
     return NULL;
 }
 
-// Categoria
+// ===================== CERCA CATEGORIA =====================
 void cercaPerCategoria(Segnalazione* head, char categoria[]) {
-    int trovate = 0;
-    while (head != NULL) {
+    int trovato = 0;
+
+    while (head) {
         if (strcmp(head->categoria, categoria) == 0) {
-            printf("\nCodice: %d - %s", head->codice, head->descrizione);
-            trovate = 1;
+            printf("Codice: %d | %s\n", head->codice, head->descrizione);
+            trovato = 1;
         }
         head = head->next;
     }
-    if (!trovate)
-        printf("Nessuna segnalazione trovata.\n");
+
+    if (!trovato)
+        msgError("Nessuna segnalazione trovata");
 }
 
-// Aggiorna stato
-void aggiornaStato(Segnalazione* head, int codice) {
-    Segnalazione* s = cercaPerCodice(head, codice);
-
-    if (s == NULL) {
-        printf("Segnalazione non trovata.\n");
+// ===================== UPDATE STATO (ADMIN) =====================
+void aggiornaStato(Segnalazione* head, int codice, int isAdmin) {
+    if (!isAdmin) {
+        msgError("Solo admin può modificare lo stato");
         return;
     }
 
-    printf("Nuovo stato: ");
+    Segnalazione* s = cercaPerCodice(head, codice);
+
+    if (!s) {
+        msgError("Non trovata");
+        return;
+    }
+
+    printf(cyan "Nuovo stato: " reset);
     scanf(" %[^\n]", s->stato);
+
+    msgSuccess("Stato aggiornato");
 }
 
-// Filtra stato
+// ===================== STATO =====================
 void stampaPerStato(Segnalazione* head, char stato[]) {
-    while (head != NULL) {
+    int ok = 0;
+
+    while (head) {
         if (strcmp(head->stato, stato) == 0) {
-            printf("\nCodice: %d - %s", head->codice, head->descrizione);
+            printf("%d - %s\n", head->codice, head->descrizione);
+            ok = 1;
         }
         head = head->next;
     }
+
+    if (!ok)
+        msgError("Nessuna segnalazione con questo stato");
 }
 
-// Urgenti
+// ===================== URGENTI =====================
 void stampaUrgenti(Segnalazione* head) {
-    while (head != NULL) {
-        if (head->urgenza >= 8) {
-            printf("\nCodice: %d - Urgenza: %d", head->codice, head->urgenza);
-        }
+    while (head) {
+        if (head->urgenza >= 8)
+            printf("URGENTE %d - %s\n", head->codice, head->descrizione);
+
         head = head->next;
     }
 }
 
-// Elimina
-Segnalazione* eliminaSegnalazione(Segnalazione* head, int codice) {
-    Segnalazione *temp = head, *prev = NULL;
-
-    while (temp != NULL && temp->codice != codice) {
-        prev = temp;
-        temp = temp->next;
-    }
-
-    if (temp == NULL) {
-        printf("Segnalazione non trovata.\n");
+// ===================== DELETE =====================
+Segnalazione* eliminaSegnalazione(Segnalazione* head, int codice, int isAdmin) {
+    if (!isAdmin) {
+        msgError("Solo admin può eliminare");
         return head;
     }
 
-    if (prev == NULL)
-        head = temp->next;
+    Segnalazione *tmp = head, *prev = NULL;
+
+    while (tmp && tmp->codice != codice) {
+        prev = tmp;
+        tmp = tmp->next;
+    }
+
+    if (!tmp) {
+        msgError("Non trovata");
+        return head;
+    }
+
+    if (!prev)
+        head = tmp->next;
     else
-        prev->next = temp->next;
+        prev->next = tmp->next;
 
-    free(temp);
-    printf("Eliminata.\n");
+    free(tmp);
 
+    msgSuccess("Eliminata");
     return head;
 }
 
-// Report
+// ===================== REPORT =====================
 void generaReport(Segnalazione* head) {
-    int totale = 0, aperte = 0, chiuse = 0;
+    int t=0,a=0,c=0;
 
-    while (head != NULL) {
-        totale++;
-        if (strcmp(head->stato, "aperta") == 0) aperte++;
-        if (strcmp(head->stato, "chiusa") == 0) chiuse++;
+    while (head) {
+        t++;
+        if (strcmp(head->stato,"aperta")==0) a++;
+        if (strcmp(head->stato,"chiusa")==0) c++;
         head = head->next;
     }
 
-    printf("\nTotale: %d\nAperte: %d\nChiuse: %d\n", totale, aperte, chiuse);
+    printf("\nTotale:%d Aperte:%d Chiuse:%d\n", t,a,c);
+}
+
+// ===================== FILE SAVE =====================
+void salvaSegnalazione(Segnalazione* s) {
+    FILE* f = fopen("segnalazioni.txt","a");
+    if(!f){msgError("Errore file"); return;}
+
+    fprintf(f,"%d %s %s %s %s %d %s\n",
+        s->codice,
+        s->utente,
+        s->categoria,
+        s->descrizione,
+        s->data,
+        s->urgenza,
+        s->stato);
+
+    fclose(f);
+}
+
+// ===================== FILE LOAD =====================
+Segnalazione* caricaSegnalazioni() {
+    FILE* f = fopen("segnalazioni.txt","r");
+    if(!f) return NULL;
+
+    Segnalazione *h=NULL,*t;
+
+    while(1){
+        t=malloc(sizeof(Segnalazione));
+
+        if(fscanf(f,"%d %s %s %s %s %d %s",
+            &t->codice,
+            t->utente,
+            t->categoria,
+            t->descrizione,
+            t->data,
+            &t->urgenza,
+            t->stato)!=7){
+            free(t);
+            break;
+        }
+
+        t->next=h;
+        h=t;
+    }
+
+    fclose(f);
+    return h;
 }
