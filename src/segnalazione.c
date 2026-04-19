@@ -80,6 +80,26 @@ void stampaSegnalazioni(Segnalazione* head, char username[], int isAdmin) {
     }
 }
 
+// ===================== Stato Segnalazione Utente =====================
+void statoSegnalazioneUtente(Segnalazione* head, char username[]) {
+    int codice;
+
+    printf("Codice: ");
+    scanf("%d", &codice);
+
+    while (head) {
+        if (head->codice == codice &&
+            strcmp(head->utente, username) == 0) {
+
+            printf("Stato: %s\n", head->stato);
+            return;
+        }
+        head = head->next;
+    }
+
+    msgError("Segnalazione non trovata o non tua");
+}
+
 // ===================== CERCA CODICE =====================
 Segnalazione* cercaPerCodice(Segnalazione* head, int codice) {
     while (head) {

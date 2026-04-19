@@ -20,6 +20,7 @@ Segnalazione* aggiungiSegnalazione(Segnalazione* head, char username[]);
 void stampaSegnalazioni(Segnalazione* head, char username[], int isAdmin);
 void stampaPerStato(Segnalazione* head, char stato[]);
 void stampaUrgenti(Segnalazione* head);
+void statoSegnalazioneUtente(Segnalazione* head, char username[]);
 
 // ricerca
 Segnalazione* cercaPerCodice(Segnalazione* head, int codice);

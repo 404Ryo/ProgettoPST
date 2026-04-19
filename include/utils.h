@@ -4,7 +4,8 @@
 void screenClear();
 void pause();
 void title();
-void menu();
+void menuUser();
+void menuAdmin();
 
 // messaggi
 void msgSuccess(const char* testo);

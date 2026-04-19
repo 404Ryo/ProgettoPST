@@ -8,10 +8,13 @@ int main() {
     int isAdmin = 0;
     char username[50];
 
-    // ===================== LOGIN SYSTEM =====================
+    // ===================== LOGIN =====================
     do {
         screenClear();
-        printf("1. Login\n2. Registrati\nScelta: ");
+
+        printf("1. Login\n");
+        printf("2. Registrati\n");
+        printf("Scelta: ");
         scanf("%d", &scelta);
 
         if (scelta == 2) {
@@ -21,38 +24,34 @@ int main() {
 
     } while (scelta != 1 || !login(username, &isAdmin));
 
-    if (isAdmin)
-        msgSuccess("Accesso come ADMIN");
-    else
-        msgInfo("Accesso come UTENTE");
-
-    pause();
-
-    // ===================== CARICAMENTO DATI =====================
+    // ===================== CARICAMENTO =====================
     Segnalazione* lista = caricaSegnalazioni();
 
     int codice;
     char categoria[50], stato[20];
 
-    // ===================== MENU PRINCIPALE =====================
+    // ===================== MENU =====================
     do {
         screenClear();
-        menu();
+
+        if (isAdmin)
+            menuAdmin();
+        else
+            menuUser();
+
         scanf("%d", &scelta);
 
         switch (scelta) {
 
-            // ➕ CREA SEGNALAZIONE (USER + ADMIN)
+            // ================= USER + ADMIN =================
             case 1:
                 lista = aggiungiSegnalazione(lista, username);
                 break;
 
-            // 📋 VISUALIZZA
             case 2:
                 stampaSegnalazioni(lista, username, isAdmin);
                 break;
 
-            // 🔎 CERCA PER CODICE
             case 3:
                 printf("Codice: ");
                 scanf("%d", &codice);
@@ -63,45 +62,62 @@ int main() {
                     msgError("Non trovata!");
                 break;
 
-            // 📂 CERCA PER CATEGORIA
+            // ================= USER =================
             case 4:
-                printf("Categoria: ");
-                scanf("%49s", categoria);
-                cercaPerCategoria(lista, categoria);
+                if (!isAdmin) {
+                    printf("Codice: ");
+                    scanf("%d", &codice);
+                    statoSegnalazioneUtente(lista, username);
+                } else {
+                    printf("Categoria: ");
+                    scanf("%49s", categoria);
+                    cercaPerCategoria(lista, categoria);
+                }
                 break;
 
-            // 🛠️ AGGIORNA STATO (ADMIN ONLY)
+            // ================= ADMIN ONLY =================
             case 5:
+                if (!isAdmin) {
+                    msgError("Non autorizzato");
+                    break;
+                }
                 printf("Codice: ");
                 scanf("%d", &codice);
                 aggiornaStato(lista, codice, isAdmin);
                 break;
 
-            // 📌 FILTRA PER STATO
             case 6:
+                if (!isAdmin) {
+                    msgError("Non autorizzato");
+                    break;
+                }
                 printf("Stato: ");
                 scanf(" %[^\n]", stato);
                 stampaPerStato(lista, stato);
                 break;
 
-            // 🚨 URGENTI
             case 7:
                 stampaUrgenti(lista);
                 break;
 
-            // ❌ ELIMINA (ADMIN ONLY)
             case 8:
+                if (!isAdmin) {
+                    msgError("Non autorizzato");
+                    break;
+                }
                 printf("Codice: ");
                 scanf("%d", &codice);
                 lista = eliminaSegnalazione(lista, codice, isAdmin);
                 break;
 
-            // 📊 REPORT
             case 9:
+                if (!isAdmin) {
+                    msgError("Non autorizzato");
+                    break;
+                }
                 generaReport(lista);
                 break;
 
-            // 🚪 USCITA
             case 0:
                 msgInfo("Uscita...");
                 break;
