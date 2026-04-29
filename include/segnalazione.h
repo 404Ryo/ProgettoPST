@@ -5,38 +5,40 @@ typedef struct Segnalazione {
     int codice;
     char utente[50];
     char categoria[50];
-    char descrizione[100];
+    char descrizione[150];
     char data[30];
     int urgenza;
     char stato[20];
     struct Segnalazione* next;
 } Segnalazione;
 
-// CRUD base
+// ================= CRUD =================
 Segnalazione* creaSegnalazione(char username[]);
 Segnalazione* aggiungiSegnalazione(Segnalazione* head, char username[]);
 
-// visualizzazione
+// ================= VISUALIZZAZIONE =================
 void stampaSegnalazioni(Segnalazione* head, char username[], int isAdmin);
 void stampaPerStato(Segnalazione* head, char stato[]);
 void stampaUrgenti(Segnalazione* head);
 void statoSegnalazioneUtente(Segnalazione* head, char username[]);
 
-// ricerca
+// ================= RICERCA =================
 Segnalazione* cercaPerCodice(Segnalazione* head, int codice);
 void cercaPerCategoria(Segnalazione* head, char categoria[]);
 
-// update
+// ================= ADMIN =================
 void aggiornaStato(Segnalazione* head, int codice, int isAdmin);
-
-// delete
 Segnalazione* eliminaSegnalazione(Segnalazione* head, int codice, int isAdmin);
 
-// report
+// ================= REPORT =================
 void generaReport(Segnalazione* head);
 
-// file
+// ================= FILE =================
 void salvaSegnalazione(Segnalazione* s);
 Segnalazione* caricaSegnalazioni();
+
+// ================= BONUS (UTILITÀ FUTURA) =================
+// utile per evitare crash da memory leak
+void liberaLista(Segnalazione* head);
 
 #endif

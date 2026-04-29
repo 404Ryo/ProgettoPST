@@ -3,16 +3,40 @@
 #include "utils.h"
 #include "colors.h"
 
+// ================= SCREEN =================
 void screenClear() {
     printf("\033[2J\033[H");
 }
 
+// ================= INPUT SICURO =================
+int leggiIntero() {
+    char buffer[100];
+    int valore;
+
+    while (1) {
+        if (!fgets(buffer, sizeof(buffer), stdin))
+            continue;
+
+        if (sscanf(buffer, "%d", &valore) == 1)
+            return valore;
+
+        printf("Input non valido.\n Inserisci un numero: ");
+    }
+}
+
+// ================= PAUSA SICURA =================
 void pause() {
-    printf("\nPremi invio per continuare...");
-    getchar();
+    printf("\nPremi INVIO per continuare...");
+    fflush(stdout);
+
+    // pulisce eventuale newline rimasto nel buffer
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+
     getchar();
 }
 
+// ================= TITLE =================
 void title() {
     printf(blue);
     printf("=====================================\n");
@@ -21,7 +45,7 @@ void title() {
     printf(reset);
 }
 
-// ===== Menu Utente =====
+// ================= MENU USER =================
 void menuUser() {
     title();
 
@@ -34,7 +58,7 @@ void menuUser() {
     printf("\nScelta: ");
 }
 
-// ===== Menu Amministratore =====
+// ================= MENU ADMIN =================
 void menuAdmin() {
     title();
 
@@ -51,8 +75,8 @@ void menuAdmin() {
 
     printf("\nScelta: ");
 }
-// ===== MESSAGGI =====
 
+// ================= MESSAGGI =================
 void msgSuccess(const char* testo) {
     printf(green "[SUCCESSO] %s\n" reset, testo);
 }

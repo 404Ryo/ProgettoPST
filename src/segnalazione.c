@@ -218,47 +218,67 @@ void generaReport(Segnalazione* head) {
 
 // ===================== FILE SAVE =====================
 void salvaSegnalazione(Segnalazione* s) {
-    FILE* f = fopen("segnalazioni.txt","a");
-    if(!f){msgError("Errore file"); return;}
+    FILE* f = fopen("segnalazioni.txt", "a");
+    if (!f) return;
 
-    fprintf(f,"%d %s %s %s %s %d %s\n",
+    fprintf(f, "%d|%s|%s|%s|%s|%d|%s\n",
         s->codice,
         s->utente,
         s->categoria,
         s->descrizione,
         s->data,
         s->urgenza,
-        s->stato);
+        s->stato
+    );
 
     fclose(f);
 }
 
 // ===================== FILE LOAD =====================
 Segnalazione* caricaSegnalazioni() {
-    FILE* f = fopen("segnalazioni.txt","r");
-    if(!f) return NULL;
+    FILE* f = fopen("segnalazioni.txt", "r");
+    if (!f) return NULL;
 
-    Segnalazione *h=NULL,*t;
+    Segnalazione* head = NULL;
+    char line[512];
 
-    while(1){
-        t=malloc(sizeof(Segnalazione));
+    while (fgets(line, sizeof(line), f)) {
 
-        if(fscanf(f,"%d %s %s %s %s %d %s",
-            &t->codice,
-            t->utente,
-            t->categoria,
-            t->descrizione,
-            t->data,
-            &t->urgenza,
-            t->stato)!=7){
-            free(t);
-            break;
-        }
+        Segnalazione* s = malloc(sizeof(Segnalazione));
+        if (!s) continue;
 
-        t->next=h;
-        h=t;
+        char* token = strtok(line, "|");
+        if (!token) { free(s); continue; }
+        s->codice = atoi(token);
+
+        token = strtok(NULL, "|");
+        if (!token) { free(s); continue; }
+        strncpy(s->utente, token, 49);
+
+        token = strtok(NULL, "|");
+        if (!token) { free(s); continue; }
+        strncpy(s->categoria, token, 49);
+
+        token = strtok(NULL, "|");
+        if (!token) { free(s); continue; }
+        strncpy(s->descrizione, token, 99);
+
+        token = strtok(NULL, "|");
+        if (!token) { free(s); continue; }
+        strncpy(s->data, token, 29);
+
+        token = strtok(NULL, "|");
+        if (!token) { free(s); continue; }
+        s->urgenza = atoi(token);
+
+        token = strtok(NULL, "|\n");
+        if (!token) { free(s); continue; }
+        strncpy(s->stato, token, 19);
+
+        s->next = head;
+        head = s;
     }
 
     fclose(f);
-    return h;
+    return head;
 }

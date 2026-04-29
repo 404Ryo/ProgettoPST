@@ -1,21 +1,26 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "segnalazione.h"
-#include "utils.h"
 #include "account.h"
+#include "utils.h"
 
 int main() {
+
     int scelta;
     int isAdmin = 0;
     char username[50];
 
-    // ===================== LOGIN =====================
+    // LOGIN SAFE
     do {
         screenClear();
 
         printf("1. Login\n");
         printf("2. Registrati\n");
         printf("Scelta: ");
-        scanf("%d", &scelta);
+
+        scelta = leggiIntero();
 
         if (scelta == 2) {
             signin();
@@ -24,26 +29,26 @@ int main() {
 
     } while (scelta != 1 || !login(username, &isAdmin));
 
-    // ===================== CARICAMENTO =====================
     Segnalazione* lista = caricaSegnalazioni();
+    if (!lista) {
+        msgInfo("Lista vuota");
+    }
 
     int codice;
-    char categoria[50], stato[20];
+    char categoria[50], stato[50];
 
-    // ===================== MENU =====================
+    // MENU LOOP
     do {
         screenClear();
 
-        if (isAdmin)
-            menuAdmin();
-        else
-            menuUser();
+        if (isAdmin) menuAdmin();
+        else menuUser();
 
-        scanf("%d", &scelta);
+        printf("Scelta: ");
+        scelta = leggiIntero();
 
         switch (scelta) {
 
-            // ================= USER + ADMIN =================
             case 1:
                 lista = aggiungiSegnalazione(lista, username);
                 break;
@@ -54,46 +59,38 @@ int main() {
 
             case 3:
                 printf("Codice: ");
-                scanf("%d", &codice);
+                codice = leggiIntero();
 
                 if (cercaPerCodice(lista, codice))
-                    msgSuccess("Trovata!");
+                    msgSuccess("Trovata");
                 else
-                    msgError("Non trovata!");
+                    msgError("Non trovata");
                 break;
 
-            // ================= USER =================
             case 4:
-                if (!isAdmin) {
-                    printf("Codice: ");
-                    scanf("%d", &codice);
+                if (!isAdmin)
                     statoSegnalazioneUtente(lista, username);
-                } else {
+                else {
                     printf("Categoria: ");
                     scanf("%49s", categoria);
                     cercaPerCategoria(lista, categoria);
                 }
                 break;
 
-            // ================= ADMIN ONLY =================
             case 5:
-                if (!isAdmin) {
-                    msgError("Non autorizzato");
-                    break;
+                if (isAdmin) {
+                    printf("Codice: ");
+                    codice = leggiIntero();
+                    aggiornaStato(lista, codice, isAdmin);
                 }
-                printf("Codice: ");
-                scanf("%d", &codice);
-                aggiornaStato(lista, codice, isAdmin);
                 break;
 
             case 6:
-                if (!isAdmin) {
-                    msgError("Non autorizzato");
-                    break;
+                if (isAdmin) {
+                    printf("Stato: ");
+                    scanf("%49s", stato);
+                    stampaPerStato(lista, stato);
                 }
-                printf("Stato: ");
-                scanf(" %[^\n]", stato);
-                stampaPerStato(lista, stato);
                 break;
 
             case 7:
@@ -101,29 +98,18 @@ int main() {
                 break;
 
             case 8:
-                if (!isAdmin) {
-                    msgError("Non autorizzato");
-                    break;
+                if (isAdmin) {
+                    printf("Codice: ");
+                    codice = leggiIntero();
+                    lista = eliminaSegnalazione(lista, codice, isAdmin);
                 }
-                printf("Codice: ");
-                scanf("%d", &codice);
-                lista = eliminaSegnalazione(lista, codice, isAdmin);
                 break;
 
             case 9:
-                if (!isAdmin) {
-                    msgError("Non autorizzato");
-                    break;
-                }
-                generaReport(lista);
+                if (isAdmin)
+                    generaReport(lista);
                 break;
 
-            case 0:
-                msgInfo("Uscita...");
-                break;
-
-            default:
-                msgError("Scelta non valida!");
         }
 
         pause();
